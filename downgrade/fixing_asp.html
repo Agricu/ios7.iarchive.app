@@ -131,7 +131,11 @@ And patch signature checks using iPatcher:
 
 <h4>Changing restore options</h4>
 
-<p>Open /Volumes/ramdisk/usr/local/share/restore/options.boardconfig.plist in a text editor and add the highlighted lines</p>
+<p>Find options plist</p>
+
+<p class="cli">sudo find /Volumes/ramdisk -name "options.*.plist"</p>
+
+<p>Open the file you get from the command above in a text editor and add the highlighted lines</p>
 
 </br><img class="align" src="images/optionsplist.png"></br>
     
