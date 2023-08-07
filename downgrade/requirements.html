@@ -63,11 +63,13 @@
 	<h4>The target firmware (iOS 7.x) which can be found <a href="https://ipsw.me/" class="link">here</a></h4>
 
 	<h4>You will also need to download an iOS 8.0 IPSW to make an SSH ramdisk and a latest IPSW to save idevicerestore SHSH</h4>
+
+	<p>NOTE: Due to Apple messing up their servers, you may need to download the IPSW using http. To do this, remove "secure-" from the URL and replace "https" with "http"</p>
 	
 	<h4>SHSH(2) (apticket) files</h4>
 	
 	<p>SHSH signatures are required in order to properly build img4 files that the BootROM will accept from pwned DFU mode. Unless you have them already, you can save them with tsschecker (or other public tools.)
-	<p>Note: SHSH version does not have to match target iOS version.</p>
+	<p>NOTE: SHSH version does not have to match target iOS version.</p>
 	<p class="cli">tsschecker -d iPhoneX,X -l -e ECID -B boardconfig -l -s</p>
 	
 	<p>If you do not know your ECID or boardconfig, connect the device in recovery mode and execute:</p>
