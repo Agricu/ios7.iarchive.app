@@ -1,0 +1,208 @@
+<html>
+    <link rel="stylesheet" href="general.css"></br>
+    <script src="script.js"></script>
+        <meta charset="Unicode">
+            <head>
+                <title>iOS 7 Tethered Downgrade</title>
+            </head>
+<body onload="dark_save()">
+<div class="main">
+    
+    <button id="dark_button" class="btn" onclick="dark()">🌙</button>
+    
+<h2>Fixing ASP</h2>
+
+<p>For some reason, AppleStorageProcessor (ASP) Firmware on iOS 12 is not compatible with iOS 7 and results in an early panic with iBoot not being able to load ASP FW and not being able to find root device. We can get around this by performing a tethered restore to iOS 8 to install a compatible ASP firmware that iOS 7 can recognize and use.</p>
+
+<p>Keys for decryption of firmware components and proper component names can be found <a href="https://www.theapplewiki.com/wiki/firmware" class="link">here</a>.</p> 
+
+<p>First step is to obviously unzip the IPSW</p>
+
+<p class="cli">mkdir ipsw && cd ipsw</p>
+
+<p class="cli">unzip /path/to/ipswfile</p>
+
+<h3>Decrypt filesystem image</h3>
+
+<p>Just like in the previous step, we must decrypt the filesystem image (the largest .dmg file inside IPSW)</p>
+    
+    <p class="cli">dmg extract encrypted.dmg rw.dmg -k key</p>
+    
+    <p class="cli">dmg build rw.dmg ios8.dmg</p>
+
+<p>Replace the original image with the decrypted one you just made</p>
+
+<h3>Decrypt iBSS and iBEC</h3>
+
+<p class="cli">cd Firmware/dfu</p>
+
+<p class="cli">img4 -i iBSS.boardconfig.RELEASE.im4p -o iBSS.dec -k ivkey</p>
+<p class="cli">img4 -i iBEC.boardconfig.RELEASE.im4p -o iBEC.dec -k ivkey</p>
+
+And patch signature checks using iPatcher:
+
+<p class="cli">ipatcher iBSS.dec iBSS.patched</p>
+
+<p class="cli">ipatcher iBEC.dec iBEC.patched -b "amfi=0xff cs_enforcement_disable=1 -v rd=md0 nand-enable-reformat=1 -progress"</p>
+
+<p>Now pack into IM4P:</p>
+
+<p class="cli">img4tool -c iBSS.boardconfig.RELEASE.im4p -t ibss iBSS.patched</p>
+
+<p class="cli">img4tool -c iBEC.boardconfig.RELEASE.im4p -t ibec iBEC.patched</p>
+
+<p>You will also need these files when making SSH ramdisk so copy these files to another folder</p>
+
+<p class="cli">mkdir ../../ramdisk</p>
+
+<p class="cli">cp iBSS.boardconfig.RELEASE.im4p ../../ramdisk/</p>
+
+<p class="cli">cp iBEC.boardconfig.RELEASE.im4p ../../ramdisk/</p>
+
+<h3>Patching DeviceTree</h3>
+
+<p>DeviceTree needs to be patched because we want an unencrypted data partition due to the lack of SEP</p>
+
+<p class="cli">cd ../all_flash/all_flash.boardconfig.production</p>
+
+<p class="cli">img4 -i devicetree.boardconfig.im4p -o dtree.raw -k ivkey</p>
+
+<p>This file is needed when making SSH ramdisk</p>
+
+<p class="cli">cp dtree.raw ../../../ramdisk/</p>
+
+<p>Open dtree.raw in a Hex Editor and find the string "content-protect"</p>
+
+</br><img class="align" src="images/findcontentprotect.png"></br>
+
+<p>Replace this with any string of the same length</p>
+
+</br><img class="align" src="images/replacecontentprotect.png"></br>
+
+<p>Pack into IM4P</p>
+
+<p class="cli">img4tool -c devicetree.boardconfig.im4p -t dtre dtree.raw</p>
+
+<p class="cli">cd ../../../</p>
+	
+	<h3>Decrypting Kernelcache</h3>
+	<p>Decrypt kernelcache without unpacking</p>
+	<p class="cli">img4 -i kernelcache.release.boardconfig -o kernelcache.im4p -k ivkey -D</p>
+
+<p>This file is also needed when making SSH ramdisk</p>
+
+<p class="cli">cp kernelcache.im4p ramdisk/</p>
+
+<p>Overwrite original (encrypted) kernelcache</p>
+
+<p class="cli">mv kernelcache.im4p kernelcache.release.boardconfig</p>
+
+<h3>Patching RestoreRamdisk</h3>
+
+<p>You can find the name of the ramdisk using the link at the top of this page</p>
+
+<p>Unpack original ramdisk into raw dmg</p>
+
+<p class="cli">img4 -i xxx.xxxxx.xxx.dmg -o ramdisk.dmg -k ivkey</p>
+
+<p>We also need this file later</p>
+
+<p class="cli">cp ramdisk.dmg ramdisk/ramdisk.dmg</p>
+
+<p>Resize and mount ramdisk</p>
+
+<p class="cli">hdiutil resize -size 40M ramdisk.dmg</p>
+
+<p class="cli">hdiutil attach ramdisk.dmg</p>
+
+<h4>Patching ASR</h4>
+
+<p>ASR needs to be patched to bypass image validation using asr64_patcher</p>
+
+<p class="cli">cp /Volumes/ramdisk/usr/sbin/asr ./</p>
+
+<p class="cli">ldid -e asr > asr.xml</p>
+
+<p class="cli">asr_64patcher asr /Volumes/ramdisk/usr/sbin/asr</p>
+
+<p class="cli">ldid -Sasr.xml /Volumes/ramdisk/usr/sbin/asr</p>
+
+<p>We now need to edit the restore options plist to disable Baseband Update and NOR flash</p>
+
+<h4>Changing restore options</h4>
+
+<p>Open /Volumes/ramdisk/usr/local/share/restore/options.boardconfig.plist in a text editor and add the highlighted lines</p>
+
+</br><img class="align" src="images/optionsplist.png"></br>
+    
+<h4>Patching restored_external</h4>
+
+<p>restored_external needs to be patched to skip SEP firmware load (because it would fail), force unconditional pass on apticket check and force unconditional fail on keybag generation (without SEP, keybag generation is impossbile and will cause restore to freeze)</p>
+
+<p>Extract entitlements</p>
+
+<p class="cli">ldid -e /Volumes/ramdisk/usr/local/bin/restored_external > ent.xml</p>
+
+<p>Load up restored_external in your favorite disassembler and find the string "invalid ticket", it should look like this</p>
+
+</br><img class="align" src="images/invalidticket.png"></br>
+    
+<p>In this function, there should be a compare and branch on zero (CBZ) to "received valid ticket" function. This needs to be changed to unconditional branch (B). You can use <a href="https://armconverter.com" class="link">armconverter</a> to do this</p>
+
+</br><img class="align" src="images/patchinvalidticket.png"></br>
+    
+<p>Find _ramrod_load_sep_os in exports, then find the call to this function</p>
+
+</br><img class="align" src="images/ramrodloadsep.png"></br>
+    
+<p>We will need to NOP the call to this function to skip SEP load by replacing the call to it with NOP and the instruction below it with MOV W0, #0</p>
+
+</br><img class="align" src="images/patchloadsep.png"></br>
+    
+<p>Lastly, we need to patch create_system_key_bag to always fail. Find the string "key bag creation failed" and find the call to it</p>
+
+</br><img class="align" src="images/keybag.png"></br>
+    
+<p>We can now patch this entire function to perform an immediate unconditional branch to "key bag creation failed"</p>
+
+</br><img class="align" src="images/patchedkeybag.png"></br>
+    
+<p>Save changes to the file and sign with entitlements</p>
+
+<p class="cli">ldid -Sent.xml /Volumes/ramdisk/usr/local/bin/restored_external</p>
+
+<p>Pack ramdisk into IM4P</p>
+
+<p class="cli">hdiutil detach /Volumes/ramdisk</p>
+
+<p class="cli">img4tool -c xxx.xxxxx.xxx.dmg -t rdsk ramdisk.dmg</p>
+
+<p>Pack all firmware components into IPSW file</p>
+
+<p class="cli">zip -r ios8.ipsw .</p>
+
+<h3>Restore</h3>
+
+<p>idevicerestore uses a weird format for SHSH blobs so we'll need to make it save one using latest IPSW</p>
+
+<p class="cli">oldidevicerestore -t latest.ipsw</p>
+
+<p>The SHSH blob will be in a folder called "shsh/" in the current directory. We now need to rename the blob for the correct version so that it can be used when restoring (example below)</p>
+
+</br><img class="align" src="images/shsh.png"></br>
+    
+<p>Now you can place your device into DFU mode and start the restore</p>
+
+<p class="cli">iPwnder32 -p</p>
+
+<p class="cli">oldidevicerestore -e -w ios8.ipsw</p>
+
+<b>NOTE: If oldidevicerestore fails while trying to upload iBSS, simply run it again</b>
+
+<p>Once you see "key bag creation failed: 0" the restore is complete and you can continue with the next step</p>
+
+	<center>Next part → <a href="making-ramdisk.html" class="link"></b>Making SSH Ramdisk</a></center></br>
+    <center><a href="index.html" class="link"></b>iOS 7 Tethered Downgrade</a></center></br>
+</div>
+</body>
+</html>

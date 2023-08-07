@@ -1,0 +1,61 @@
+<html>
+    <link rel="stylesheet" href="general.css"></br>
+    <script src="script.js"></script>
+        <meta charset="Unicode">
+            <head>
+                <title>iOS 7 Tethered Downgrade</title>
+            </head>
+<body onload="dark_save()">
+<div class="main">
+    
+    <button id="dark_button" class="btn" onclick="dark()">🌙</button>
+    
+    <h1>Making custom ramdisk</h1>
+    <p>Unfortunately no automated tool exists to make iOS 8 SSH ramdisks and we can't use an iOS 9-12 ramdisk because mounting our partitions on that would break ASP</br>
+	
+    <h2>Adding SSH binaries</h2>
+    <p>Download SSH binpack</p>
+    <p class="cli">cd ramdisk</p>
+    
+    <p class="cli">curl -O https://iarchive.app/Download/iram.tar</p>
+    
+    <p>Resize and mount ramdisk</p>
+    
+	<p class="cli">hdiutil resize -size 50M ramdisk.dmg</p>
+    
+    <p class="cli">hdiutil attach ramdisk.dmg</p>
+    
+    <p>Extract SSH binpack onto ramdisk</p>
+    
+    <p class="cli">tar -xvf iram.tar -C /Volumes/ramdisk</p>
+    
+    <p class="cli">hdiutil detach /Volumes/ramdisk</p>
+    
+    <h1>Pack boot files into img4</h1>
+    
+    <h2>iBSS and iBEC</h2>
+    
+    <p class="cli">img4tool -c iBSS.img4 -p iBSS.boardconfig.RELEASE.im4p -m IM4M</p>
+    
+    <p class="cli">img4tool -c iBEC.img4 -p iBEC.boardconfig.RELEASE.im4p -m IM4M</p>
+    
+    <h2>Kernelcache and DeviceTree</h2>
+    
+    <p class="cli">img4 -i kernelcache.im4p -o kernelcache.img4 -M IM4M -T rkrn</p>
+    
+    <p class="cli">img4 -i devicetree -o devicetree.img4 -M IM4M -T rdtr</p>
+
+    <h2>Ramdisk</h2>
+    
+    <p class="cli">img4tool -c ramdisk.im4p -t rdsk ramdisk.dmg</p>
+    
+    <p class="cli">img4tool -c ramdisk.img4 -p ramdisk.im4p -m IM4M</p>
+    
+    <p>Now we can boot the ramdisk!</p>
+	
+    <center>Next part → <a href="ramdisk-boot.html" class="link"></b>Ramdisk Boot<a></center></br>
+    <center><a href="index.html" class="link"></b>Dual Booting 64 Bit</a></center></br>
+</p>
+</div>
+</body>
+</html>

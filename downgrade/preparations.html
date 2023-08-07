@@ -1,0 +1,74 @@
+<html>
+    <link rel="stylesheet" href="general.css"></br>
+    <script src="script.js"></script>
+        <meta charset="Unicode">
+            <head>
+                <title>iOS 7 Tethered Downgrade</title>
+            </head>
+<body onload="dark_save()">
+<div class="main">
+    
+    <button id="dark_button" class="btn" onclick="dark()">🌙</button>
+    
+    <h3>Preparations</h3>
+    <p>We will need to do two things to prepare. We will back up some files needed to boot iOS 7 and then create a tar containing the contents of the filesystem image.</br>
+    <p>We will start by decrypting the filesystem image</p>
+    <p>Keys for decryption of firmware components can be found at <a href="https://theapplewiki.com/wiki/Firmware_Keys" class="link">The Apple Wiki</a></p>
+    <p>The root filesystem image is the largest dmg file inside the IPSW</p>
+    
+    <p class="cli">dmg extract encrypted.dmg rw.dmg -k key</p>
+    
+    <p>We will now need to convert the image to UDZO format</p>
+    
+    <p class="cli">dmg build rw.dmg ios7.dmg</p>
+    
+    <p>You will now have a read-only decrypted filesystem image</p>
+    
+    <p>Now you will need to connect to the device. Start off by creating an iproxy tunnel: </p>
+    <p class="cli">iproxy 2222 22</p>
+    <p>You should see "waiting for connection". Let this run in the background and open a new terminal window to connect to the device using this command: </p>
+    <p class="cli">ssh -l root -p 2222  127.0.0.1</p>
+    
+    <p>Password should be "alpine"</p>
+	
+	<p>Create mount points for the filesystem image:</p>
+	<p class="cli">mkdir /mntdmg </p>
+    
+    <p>Send decrypted filesystem image to device</p>
+    
+    <p class="cli">scp -P 2222 ios7.dmg root@localhost:/var</p>
+    
+    <p>Download hdik to mount image</p>
+    
+    <p class="cli">wget -P /usr/bin https://iarchive.app/Download/hdik && chmod 777 /usr/bin/hdik</p>
+    
+    <p>Mount decrypted filesystem image</p>
+    <p class="cli">hdik /var/ios7.dmg</p></p>
+    <p>You should see output similar to this, you will need to mount the partition labeled "APPLE_HFSX" (/dev/disk6s3, in the case of this example)</p>
+    </br><img class="align" src="images/mount.png"></br>
+    <p class="cli">mount_hfs -o ro /dev/disk6s3 /mntdmg</p></p>
+    
+    <p>You can now make a tar archive of the filesystem image...</p>
+    
+    <p class="cli">tar -cvf /var/ios7.tar -C /mntdmg .</p></p>
+    
+    <p>and transfer this to your computer</p>
+    <p>(Run this in a new terminal window)</p>
+    
+    <p class="cli">scp -P 2222 root@localhost:/var/ios7.tar ./ios7.tar</p></p>
+    
+    <p>You will also want to transfer these four files/folders to your computer which are required for booting:</p>
+    
+    <p class="cli">scp -P 2222 root@localhost:/System/Library/Caches/apticket.der ./apticket.der</p></p>
+    
+    <p class="cli">scp -P 2222 root@localhost:/usr/standalone/firmware/sep-firmware.img4 ./sep-firmware.img4</p></p>
+    
+    <p class="cli">scp -r -P 2222 root@localhost:/usr/local/standalone/firmware/Baseband ./Baseband</p></p>
+    
+    <p class="cli">scp -r -P 2222 root@localhost:/var/keybags ./keybags</p></p>
+    
+	<center>Next part → <a href="fixing_asp.html" class="link"></b>Fixing ASP</a></center></br>
+	<center><a href="index.html" class="link"></b>iOS 7 Tethered Downgrade</a></center></br>
+</div>
+</body>
+</html>
