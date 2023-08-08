@@ -24,7 +24,48 @@
 
 <p>NOTE: If you have waited a long time and it still has not connected, press CTRL+C and try to connect again</p>
 
+<p>Clear partitions and create new LwVM partition table</p>
+
+<p class="cli">lwvm init</p>
+
+<p>Reboot</p>
+
+<p class="cli">reboot</p>
+
+<b>You now need to <a href="ramdisk-boot.html" class="link">boot ramdisk again</a></b>
+
+<p>Now we need to create new partitions</p>
+
+<p class="cli">gptfdisk /dev/rdisk0s1</p>
+
+<p>You should see this:</p>
+
+</br><img class="align" src="images/gptfdisk.png"></br>
+
+<p>You can then press buttons in this order:</p>
+
+<p class="cli">n &lt;enter&gt; 1 &lt;enter&gt; &lt;enter&gt; 786438 &lt;enter&gt; &lt;enter&gt;</p>
+
+<p>If you pressed the buttons correctly, this is what you should see:</p>
+
+</br><img class="align" src="images/partition1.png"></br>
+
+<p>Now create the data partition</p>
+
+<p class="cli">n &lt;enter&gt; 2 &lt;enter&gt; &lt;enter&gt; &lt;enter&gt; &lt;enter&gt;</p>
+
+</br><img class="align" src="images/partition2.png"></br>
+
+<p>Save changes</p>
+
+<p class="cli">w &lt;enter&gt; y &lt;enter&gt;</p>
+
+</br><img class="align" src="images/savechanges.png"></br>
+
 <p>Format partitions</p>
+
+<b>NOTE: If for some reason newfs_hfs can't find the new partitions, you may need to reboot and <a href="ramdisk-boot.html" class="link">boot ramdisk again</a></b>
+
 <p class="cli">/sbin/newfs_hfs -s -v System -J -b 4096 -n a=4096,c=4096,e=4096 /dev/disk0s1s1</p>
 <p class="cli">/sbin/newfs_hfs -s -v Data -J -b 4096 -n a=4096,c=4096,e=4096 /dev/disk0s1s2</p>
 

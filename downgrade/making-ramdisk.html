@@ -11,13 +11,16 @@
     <button id="dark_button" class="btn" onclick="dark()">🌙</button>
     
     <h1>Making custom ramdisk</h1>
-    <p>Unfortunately no automated tool exists to make iOS 8 SSH ramdisks and we can't use an iOS 9-12 ramdisk because mounting our partitions on that would break ASP</br>
+    <p>Unfortunately no automated tool exists to make iOS 8 SSH ramdisks and we can't use an iOS 9-12 ramdisk because we need to downgrade ASP</br>
 	
     <h2>Adding SSH binaries</h2>
     <p>Download SSH binpack</p>
-    <p class="cli">cd ramdisk</p>
     
     <p class="cli">curl -O https://iarchive.app/Download/iram.tar</p>
+    
+    <p>Unpack ramdisk to raw</p>
+    
+    <p class="cli">img4 -i xxx.xxxxx.xxx.dmg -o ramdisk.dmg -k ivkey</p>
     
     <p>Resize and mount ramdisk</p>
     
@@ -31,21 +34,38 @@
     
     <p class="cli">hdiutil detach /Volumes/ramdisk</p>
     
-    <h1>Pack boot files into img4</h1>
+    <h3>Decrypt iBSS and iBEC</h3>
+
+    <p class="cli">img4 -i iBSS.boardconfig.RELEASE.im4p -o iBSS.dec -k ivkey</p>
+    <p class="cli">img4 -i iBEC.boardconfig.RELEASE.im4p -o iBEC.dec -k ivkey</p>
+
+    And patch signature checks using iPatcher:
+
+    <p class="cli">ipatcher iBSS.dec iBSS.patched</p>
+
+    <p class="cli">ipatcher iBEC.dec iBEC.patched -b "amfi=0xff cs_enforcement_disable=1 -v rd=md0 nand-enable-reformat=1 -progress"</p>
     
-    <h2>iBSS and iBEC</h2>
+    <p>Pack boot files into img4</p>
     
-    <p class="cli">img4tool -c iBSS.img4 -p iBSS.boardconfig.RELEASE.im4p -m IM4M</p>
+    <p class="cli">img4 -i iBSS.patched -o iBSS.img4 -M IM4M -A -T ibss</p>
     
-    <p class="cli">img4tool -c iBEC.img4 -p iBEC.boardconfig.RELEASE.im4p -m IM4M</p>
+    <p class="cli">img4 -i iBEC.patched -o iBEC.img4 -M IM4M -A -T ibec</p>
     
-    <h2>Kernelcache and DeviceTree</h2>
+    <h2>Pack Kernelcache and DeviceTree into img4</h2>
+    
+    <h3>Kernelcache</h3>
+    
+    <p class="cli">img4 -i kernelcache.release.boardconfig -o kernelcache.im4p -k ivkey -D</p>
     
     <p class="cli">img4 -i kernelcache.im4p -o kernelcache.img4 -M IM4M -T rkrn</p>
     
-    <p class="cli">img4 -i devicetree -o devicetree.img4 -M IM4M -T rdtr</p>
+    <h3>DeviceTree</h3>
+    
+    <p class="cli">img4 -i devicetree.boardconfig.im4p -o dtree.raw -k ivkey</p>
+    
+    <p class="cli">img4 -i dtree.raw -o devicetree.img4 -M IM4M -T rdtr</p>
 
-    <h2>Ramdisk</h2>
+    <h2>Pack ramdisk into img4</h2>
     
     <p class="cli">img4tool -c ramdisk.im4p -t rdsk ramdisk.dmg</p>
     
