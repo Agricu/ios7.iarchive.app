@@ -10,7 +10,7 @@
     
     <button id="dark_button" class="btn" onclick="dark()">🌙</button>
     
-    <h3>Preparations</h3>
+    <h2>Preparations</h2>
     <p>We will need to do two things to prepare. We will back up some files needed to boot iOS 7 and create a tar containing the contents of the filesystem image.</br>
     <p>We will start by decrypting the filesystem image</p>
     <p>Keys for decryption of firmware components can be found at <a href="https://theapplewiki.com/wiki/Firmware_Keys" class="link">The Apple Wiki</a></p>
@@ -32,11 +32,11 @@
         
     <p>We need to enable ownership for the tar to have correct ownership</p>
         
-    <p class="cli">sudo diskutil enableOwnership /Volumes/mountpoint</p>
+    <p class="cli">sudo diskutil enableOwnership mountpoint</p>
     
     <p>Now you can create the tar</p>
     
-    <p class="cli">sudo gtar -cvf ios7.tar -C /Volumes/mountpoint .</p></p>
+    <p class="cli">sudo gtar -cvf ios7.tar -C mountpoint .</p></p>
     
     <p>Now you will need to connect to the device to backup some files. Start off by creating an iproxy tunnel: </p>
     <p class="cli">iproxy 2222 22</p>

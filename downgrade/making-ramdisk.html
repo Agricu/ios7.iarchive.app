@@ -10,10 +10,10 @@
     
     <button id="dark_button" class="btn" onclick="dark()">🌙</button>
     
-    <h1>Making custom ramdisk</h1>
+    <h2>Making custom ramdisk</h2>
     <p>Unfortunately no automated tool exists to make iOS 8 SSH ramdisks and we can't use an iOS 9-12 ramdisk because we need to downgrade ASP</br>
 	
-    <h2>Adding SSH binaries</h2>
+    <h3>Adding SSH binaries</h3>
     <p>Download SSH binpack</p>
     
     <p class="cli">curl -O https://iarchive.app/Download/iram.tar</p>
@@ -34,12 +34,13 @@
     
     <p class="cli">hdiutil detach /Volumes/ramdisk</p>
     
-    <h3>Decrypt iBSS and iBEC</h3>
+    <h3>Patch iBSS and iBEC</h3>
+    <p>Decryption</p>
 
     <p class="cli">img4 -i iBSS.boardconfig.RELEASE.im4p -o iBSS.dec -k ivkey</p>
     <p class="cli">img4 -i iBEC.boardconfig.RELEASE.im4p -o iBEC.dec -k ivkey</p>
 
-    And patch signature checks using iPatcher:
+    <p>Patch signature checks using iPatcher</p>
 
     <p class="cli">ipatcher iBSS.dec iBSS.patched</p>
 
@@ -51,15 +52,15 @@
     
     <p class="cli">img4 -i iBEC.patched -o iBEC.img4 -M IM4M -A -T ibec</p>
     
-    <h2>Pack Kernelcache and DeviceTree into img4</h2>
+    <h3>Pack Kernelcache and DeviceTree into img4</h3>
     
-    <h3>Kernelcache</h3>
+    <h4>Kernelcache</h4>
     
     <p class="cli">img4 -i kernelcache.release.boardconfig -o kernelcache.im4p -k ivkey -D</p>
     
     <p class="cli">img4 -i kernelcache.im4p -o kernelcache.img4 -M IM4M -T rkrn</p>
     
-    <h3>DeviceTree</h3>
+    <h4>DeviceTree</h4>
     
     <p class="cli">img4 -i devicetree.boardconfig.im4p -o dtree.raw -k ivkey</p>
     
