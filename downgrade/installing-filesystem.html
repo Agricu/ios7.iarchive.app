@@ -68,7 +68,7 @@
 
 </br><img class="align" src="images/sync.png"></br>
 <p> </p>
-<b>NOTE: If for some reason newfs_hfs can't find the new partitions, you may need to reboot and <a href="ramdisk-boot.html" class="link">boot ramdisk again</a></b>
+<b>IMPORTANT: If for some reason newfs_hfs can't find the new partitions, you may need to reboot and <a href="ramdisk-boot.html" class="link">boot ramdisk again</a></b>
 <p>Format partitions</p>
 <p class="cli">/sbin/newfs_hfs -s -v System -J -b 4096 -n a=4096,c=4096,e=4096 /dev/disk0s1s1</p>
 <p class="cli">/sbin/newfs_hfs -s -v Data -J -b 4096 -n a=4096,c=4096,e=4096 /dev/disk0s1s2</p>
